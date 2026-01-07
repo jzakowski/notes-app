@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
+import { signOut, useSession } from 'next-auth/react'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import NoteCardSkeleton from '@/components/NoteCardSkeleton'
 
@@ -33,6 +34,7 @@ interface NotesSidebarProps {
 }
 
 export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebarProps) {
+  const { data: session } = useSession()
   const [notes, setNotes] = useState<Note[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
@@ -45,6 +47,10 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
   const [newCategoryColor, setNewCategoryColor] = useState('#3B82F6')
   const router = useRouter()
   const pathname = usePathname()
+
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/auth/login' })
+  }
 
   // Swipe gesture detection
   const [touchStart, setTouchStart] = useState<number | null>(null)
@@ -338,10 +344,38 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
           {/* Header */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-4 mt-8 lg:mt-0">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                Notes
-              </h2>
-              <ThemeToggle />
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  Notes
+                </h2>
+                {session?.user?.email && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {session.user.email}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <button
+                  onClick={handleLogout}
+                  className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  title="Logout"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Search */}
