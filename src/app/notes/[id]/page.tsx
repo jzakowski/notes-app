@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
+import NotesSidebar from '@/components/NotesSidebar'
 
 interface Note {
   id: string
@@ -120,97 +120,95 @@ export default function NoteEditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link
-              href="/notes"
-              className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Notes
-            </Link>
-            <div className="flex items-center gap-3">
-              {saving && (
-                <span className="text-sm text-gray-500">Saving...</span>
-              )}
-              {!saving && lastSaved && (
-                <span className="text-sm text-gray-500">
-                  Saved {lastSaved.toLocaleTimeString()}
-                </span>
-              )}
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                Delete
-              </button>
+    <div className="flex h-screen bg-white overflow-hidden">
+      {/* Sidebar */}
+      <NotesSidebar currentNoteId={noteId} />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        {/* Header */}
+        <div className="border-b border-gray-200 bg-white">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex-1" />
+              <div className="flex items-center gap-3">
+                {saving && (
+                  <span className="text-sm text-gray-500">Saving...</span>
+                )}
+                {!saving && lastSaved && (
+                  <span className="text-sm text-gray-500">
+                    Saved {lastSaved.toLocaleTimeString()}
+                  </span>
+                )}
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="max-w-4xl mx-auto px-4 mt-4">
-          <div className="p-4 bg-red-50 text-red-700 rounded-lg">
-            {error}
+        {/* Error Message */}
+        {error && (
+          <div className="px-6 pt-4">
+            <div className="p-4 bg-red-50 text-red-700 rounded-lg">
+              {error}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Note?</h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete "{title}"? This action cannot be undone.
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Note?</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete "{title}"? This action cannot be undone.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={deleteNote}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Editor */}
+        <div className="flex-1 overflow-y-auto px-6 py-8">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Note title"
+            className="w-full text-3xl font-bold text-gray-900 placeholder-gray-400 border-none outline-none mb-6 bg-transparent"
+          />
+
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Start writing your note..."
+            className="w-full min-h-[500px] text-lg text-gray-700 placeholder-gray-400 border-none outline-none resize-none bg-transparent leading-relaxed"
+          />
+
+          {/* Auto-save indicator */}
+          <div className="mt-8 pt-4 border-t border-gray-100">
+            <p className="text-sm text-gray-400">
+              Changes are saved automatically
             </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={deleteNote}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Delete
-              </button>
-            </div>
           </div>
-        </div>
-      )}
-
-      {/* Editor */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Note title"
-          className="w-full text-3xl font-bold text-gray-900 placeholder-gray-400 border-none outline-none mb-6 bg-transparent"
-        />
-
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Start writing your note..."
-          className="w-full min-h-[500px] text-lg text-gray-700 placeholder-gray-400 border-none outline-none resize-none bg-transparent leading-relaxed"
-        />
-
-        {/* Auto-save indicator */}
-        <div className="mt-8 pt-4 border-t border-gray-100">
-          <p className="text-sm text-gray-400">
-            Changes are saved automatically
-          </p>
         </div>
       </div>
     </div>
