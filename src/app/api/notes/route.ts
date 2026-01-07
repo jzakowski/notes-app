@@ -22,7 +22,10 @@ export async function GET() {
     return NextResponse.json(notes)
   } catch (error) {
     console.error('Error fetching notes:', error)
-    return NextResponse.json({ error: 'Failed to fetch notes' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch notes', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    )
   }
 }
 
@@ -32,8 +35,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { title, content, categoryId } = body
 
-    if (!title) {
-      return NextResponse.json({ error: 'Title is required' }, { status: 400 })
+    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Title is required and must not be empty' },
+        { status: 400 }
+      )
+    }
+
+    if (title.length > 200) {
+      return NextResponse.json(
+        { error: 'Title must be less than 200 characters' },
+        { status: 400 }
+      )
     }
 
     // For now, use a temporary user ID (authentication will be added later)
@@ -72,6 +85,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(note, { status: 201 })
   } catch (error) {
     console.error('Error creating note:', error)
-    return NextResponse.json({ error: 'Failed to create note' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to create note', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    )
   }
 }

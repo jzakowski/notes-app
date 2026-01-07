@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import NotesSidebar from '@/components/NotesSidebar'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+import toast from 'react-hot-toast'
 
 interface Note {
   id: string
@@ -24,6 +26,7 @@ export default function NoteEditorPage() {
   const [error, setError] = useState<string | null>(null)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [titleError, setTitleError] = useState<string | null>(null)
 
   // Fetch note on mount
   useEffect(() => {
@@ -35,7 +38,7 @@ export default function NoteEditorPage() {
       const response = await fetch(`/api/notes/${noteId}`)
       if (!response.ok) {
         if (response.status === 404) {
-          setError('Note not found')
+          toast.error('Note not found')
           router.push('/notes')
           return
         }
@@ -47,7 +50,9 @@ export default function NoteEditorPage() {
       setContent(data.content)
       setLastSaved(new Date(data.updatedAt))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
+      toast.error(errorMessage)
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -65,14 +70,21 @@ export default function NoteEditorPage() {
         body: JSON.stringify({ title, content })
       })
 
-      if (!response.ok) throw new Error('Failed to save note')
+      if (!response.ok) {
+        throw new Error('Failed to save note')
+      }
 
       const updatedNote = await response.json()
       setNote(updatedNote)
       setLastSaved(new Date())
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save note')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save note'
+      // Only show toast for network errors, not validation errors
+      if (errorMessage.includes('Network') || errorMessage.includes('fetch')) {
+        toast.error('Network error. Please check your connection.')
+      }
+      setError(errorMessage)
     } finally {
       setSaving(false)
     }
@@ -97,9 +109,12 @@ export default function NoteEditorPage() {
 
       if (!response.ok) throw new Error('Failed to delete note')
 
+      toast.success('Note deleted successfully')
       router.push('/notes')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete note')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete note'
+      toast.error(errorMessage)
+      setError(errorMessage)
     }
   }
 
@@ -120,9 +135,10 @@ export default function NoteEditorPage() {
   }
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
-      {/* Sidebar */}
-      <NotesSidebar currentNoteId={noteId} />
+    <ErrorBoundary>
+      <div className="flex h-screen bg-white overflow-hidden">
+        {/* Sidebar */}
+        <NotesSidebar currentNoteId={noteId} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
@@ -151,11 +167,25 @@ export default function NoteEditorPage() {
           </div>
         </div>
 
-        {/* Error Message */}
+        {/* Error Message with Retry */}
         {error && (
           <div className="px-6 pt-4">
-            <div className="p-4 bg-red-50 text-red-700 rounded-lg">
-              {error}
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <span className="text-red-700">{error}</span>
+              </div>
+              <button
+                onClick={() => {
+                  setError(null)
+                  saveNote()
+                }}
+                className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+              >
+                Retry
+              </button>
             </div>
           </div>
         )}
@@ -188,13 +218,29 @@ export default function NoteEditorPage() {
 
         {/* Editor */}
         <div className="flex-1 overflow-y-auto px-6 py-8">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Note title"
-            className="w-full text-3xl font-bold text-gray-900 placeholder-gray-400 border-none outline-none mb-6 bg-transparent"
-          />
+          <div className="mb-6">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => {
+                const value = e.target.value
+                setTitle(value)
+                // Validate title length
+                if (value.length > 200) {
+                  setTitleError('Title must be less than 200 characters')
+                } else {
+                  setTitleError(null)
+                }
+              }}
+              placeholder="Note title"
+              className={`w-full text-3xl font-bold text-gray-900 placeholder-gray-400 border-none outline-none bg-transparent ${
+                titleError ? 'border-b-2 border-red-500' : ''
+              }`}
+            />
+            {titleError && (
+              <p className="mt-2 text-sm text-red-600">{titleError}</p>
+            )}
+          </div>
 
           <textarea
             value={content}
@@ -212,5 +258,6 @@ export default function NoteEditorPage() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

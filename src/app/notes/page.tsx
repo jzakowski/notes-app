@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import NotesSidebar from '@/components/NotesSidebar'
+import toast from 'react-hot-toast'
 
 interface Note {
   id: string
@@ -33,7 +34,9 @@ export default function NotesListPage() {
       )
       setNotes(sorted)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
+      toast.error(errorMessage)
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -60,9 +63,12 @@ export default function NotesListPage() {
       if (!response.ok) throw new Error('Failed to create note')
 
       const newNote = await response.json()
+      toast.success('Note created successfully')
       router.push(`/notes/${newNote.id}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create note')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create note'
+      toast.error(errorMessage)
+      setError(errorMessage)
     }
   }
 
