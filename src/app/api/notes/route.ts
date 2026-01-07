@@ -6,11 +6,23 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const categoryId = searchParams.get('categoryId')
+    const tagIds = searchParams.getAll('tagIds')
 
     // Build where clause for filtering
     const where: any = {}
     if (categoryId) {
       where.categoryId = categoryId
+    }
+
+    // Filter by tags (AND logic - note must have all specified tags)
+    if (tagIds.length > 0) {
+      where.noteTags = {
+        some: {
+          tagId: {
+            in: tagIds
+          }
+        }
+      }
     }
 
     // For now, get all notes (authentication will be added later)
