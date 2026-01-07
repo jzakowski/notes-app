@@ -1,0 +1,494 @@
+# Project Specification
+
+## 1. PROJECT OVERVIEW
+
+### Project Name
+Notes App - Apple Notes Style
+
+### Description
+A clean, minimal note-taking application with rich media support (images, videos). Apple Notes inspired design with focus on simplicity and elegance.
+
+### Target Users
+- Personal users who want to quickly capture thoughts
+- Users who need to organize notes with media attachments
+- Cross-platform users (Web first, mobile responsive)
+
+---
+
+## 2. TECHNOLOGY STACK
+
+### Frontend
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: React Context / Zustand
+- **Rich Text**: Tiptap or TipTap
+
+### Backend
+- **Runtime**: Node.js (Next.js API Routes)
+- **Database**: Prisma ORM
+  - Development: SQLite
+  - Production: PostgreSQL
+- **Auth**: NextAuth.js (Email + Google OAuth)
+- **File Storage**: Uploadthing or S3
+- **Hosting**: Vercel
+
+---
+
+## 3. FEATURE LIST
+
+### Complexity Levels
+
+**SIMPLE**: 1 Issue covers the entire feature
+**MEDIUM**: 1 Issue per provider/method
+**COMPLEX**: 1 Issue per sub-feature
+
+---
+
+## FEATURES
+
+### Feature: Project Setup
+**Complexity:** simple
+
+**Description:** Initialize Next.js project with TypeScript, Tailwind, Prisma, and basic folder structure.
+
+**Test Cases:**
+- [ ] **Setup completed**: Project runs on `npm run dev`, displays basic home page
+- [ ] **Database configured**: Prisma schema created, `npx prisma db push` succeeds
+- [ ] **Folder structure created**: `src/app`, `src/components`, `src/lib`, `prisma/schema.prisma`
+
+**Priority:** high
+
+---
+
+### Feature: Database Schema
+**Complexity:** simple
+
+**Description:** Create Prisma schema for User, Note, Category, Tag, and Attachment models with proper relationships.
+
+**Test Cases:**
+- [ ] **Schema defined**: All models created in `prisma/schema.prisma`
+- [ ] **Migration successful**: `npx prisma migrate dev` creates tables
+- [ ] **Relationships work**: User → Notes, Note → Attachments, Note → Tags
+
+**Priority:** high
+
+---
+
+### Feature: Authentication - Email/Password
+**Complexity:** medium
+
+**Description:** User authentication with email and password using NextAuth.js Credentials provider.
+
+**Test Cases:**
+- [ ] **Sign up**: Navigate to /auth/signup, enter email/password, create account
+- [ ] **Login**: Navigate to /auth/login, enter credentials, redirect to dashboard
+- [ ] **Logout**: Click logout button, redirect to login page
+- [ ] **Protected routes**: Access /notes without login → redirect to login
+
+**Priority:** high
+
+---
+
+### Feature: Authentication - Google OAuth
+**Complexity:** medium
+
+**Description:** Google OAuth authentication using NextAuth.js Google provider.
+
+**Test Cases:**
+- [ ] **Google button**: "Continue with Google" button visible on login page
+- [ ] **OAuth flow**: Click Google button, authenticate with Google, redirect to dashboard
+- [ ] **Account creation**: New Google users automatically create account in database
+- [ ] **Session persists**: Refresh page, user remains logged in
+
+**Priority:** medium
+
+---
+
+### Feature: Note Editor - Basic
+**Complexity:** simple
+
+**Description:** Create and edit notes with title and plain text content. Auto-save functionality.
+
+**Test Cases:**
+- [ ] **Create note**: Click "New Note", enter title and text, note appears in list
+- [ ] **Edit note**: Click existing note, modify text, changes save automatically
+- [ ] **Delete note**: Click delete, confirm, note removed from list
+- [ ] **Auto-save**: Type in editor, wait 2 seconds, refresh page → text saved
+
+**Priority:** high
+
+---
+
+### Feature: Rich Text Editor
+**Complexity:** complex
+
+**Description:** Full rich text editor with formatting options (bold, italic, headings, lists, links).
+
+**Sub-Feature: Text Formatting**
+- [ ] **Bold/Italic**: Highlight text, click B or I, text formatted
+- [ ] **Headings**: Select text, choose H1/H2/H3 from dropdown
+- [ ] **Lists**: Click bullet list button, create bulleted list
+- [ ] **Links**: Select text, press Cmd+K, enter URL, link created
+
+**Sub-Feature: Block Types**
+- [ ] **Code blocks**: Insert code block with syntax highlighting
+- [ ] **Quotes**: Insert blockquote
+- [ ] **Dividers**: Insert horizontal rule
+
+**Sub-Feature: Editor Toolbar**
+- [ ] **Toolbar visible**: Toolbar appears at top of editor when note is open
+- [ ] **Toolbar buttons**: All formatting buttons work and show active state
+
+**Priority:** high
+
+---
+
+### Feature: Notes List & Sidebar
+**Complexity:** simple
+
+**Description:** Left sidebar showing list of all notes with search and filter options.
+
+**Test Cases:**
+- [ ] **Notes list**: Left sidebar shows all notes sorted by updated date
+- [ ] **Note preview**: Each item shows title, preview text, date
+- [ ] **Click to open**: Click note in list, opens in main editor
+- [ ] **Active state**: Selected note highlighted in list
+
+**Priority:** high
+
+---
+
+### Feature: Search & Filter
+**Complexity:** complex
+
+**Description:** Search notes by text content and filter by category/tags.
+
+**Sub-Feature: Text Search**
+- [ ] **Search input**: Search box in sidebar, type query
+- [ ] **Real-time results**: Results update as you type
+- [ ] **Search highlights**: Open note, search terms highlighted
+
+**Sub-Feature: Category Filter**
+- [ ] **Category dropdown**: Filter notes by category
+- [ ] **Show all**: "All Notes" option shows everything
+- [ ] **Category count**: Each category shows note count
+
+**Sub-Feature: Tag Filter**
+- [ ] **Tag chips**: Click tag in note, filter by that tag
+- [ ] **Multiple tags**: Filter by multiple tags simultaneously
+- [ ] **Clear filters**: Button to clear all filters
+
+**Priority:** medium
+
+---
+
+### Feature: Categories
+**Complexity:** simple
+
+**Description:** Create and manage categories (folders) to organize notes.
+
+**Test Cases:**
+- [ ] **Create category**: Click "New Category", enter name, category appears in sidebar
+- [ ] **Assign category**: In note editor, select category from dropdown
+- [ ] **Edit category**: Right-click category, rename, name updates
+- [ ] **Delete category**: Delete category, notes move to "Uncategorized"
+
+**Priority:** medium
+
+---
+
+### Feature: Tags
+**Complexity:** simple
+
+**Description:** Add tags to notes for flexible organization.
+
+**Test Cases:**
+- [ ] **Add tag**: In note editor, type #tagname, press Enter, tag created
+- [ ] **Tag chips**: Tags appear as chips below note title
+- [ ] **Remove tag**: Click × on tag chip, tag removed
+- [ ] **Tag suggestions**: Type #, see existing tags suggestions
+
+**Priority:** medium
+
+---
+
+### Feature: Image Upload - Drag & Drop
+**Complexity:** medium
+
+**Description:** Upload images by dragging and dropping into the note editor.
+
+**Test Cases:**
+- [ ] **Drag image**: Drag image from desktop, drop in editor
+- [ ] **Image preview**: Image appears in editor at drop position
+- [ ] **Image resize**: Drag corner of image, resize
+- [ ] **Upload progress**: Show progress bar during upload
+
+**Priority:** high
+
+---
+
+### Feature: Image Upload - File Picker
+**Complexity:** medium
+
+**Description:** Upload images using file picker button in editor toolbar.
+
+**Test Cases:**
+- [ ] **Image button**: Click image icon in toolbar, file picker opens
+- [ ] **Select image**: Choose image file, image inserts at cursor position
+- [ ] **Multiple images**: Select multiple images, all upload sequentially
+- [ ] **File types**: Only .jpg, .png, .gif, .webp allowed
+
+**Priority:** high
+
+---
+
+### Feature: Image Upload - URL
+**Complexity:** medium
+
+**Description:** Insert images by URL (paste image link).
+
+**Test Cases:**
+- [ ] **URL input**: Click "Insert from URL", enter image URL
+- [ ] **Preview**: Show image preview before inserting
+- [ ] **Invalid URL**: Show error if URL is not an image
+- [ ] **Insert**: Click insert, image appears in editor
+
+**Priority:** low
+
+---
+
+### Feature: Video Upload - Drag & Drop
+**Complexity:** medium
+
+**Description:** Upload videos by dragging and dropping into note editor.
+
+**Test Cases:**
+- [ ] **Drag video**: Drag video file, drop in editor
+- [ ] **Video player**: HTML5 video player appears with controls
+- [ ] **Size limit**: Reject videos larger than 100MB with error message
+- [ ] **Supported formats**: Accept .mp4, .mov, .webm, reject others
+
+**Priority:** high
+
+---
+
+### Feature: Video Upload - File Picker
+**Complexity:** medium
+
+**Description:** Upload videos using file picker button.
+
+**Test Cases:**
+- [ ] **Video button**: Click video icon in toolbar, file picker opens
+- [ ] **Select video**: Choose video file, video inserts at cursor
+- [ ] **Upload progress**: Show percentage and estimated time
+- [ ] **Thumbnail**: Generate thumbnail for video after upload
+
+**Priority:** high
+
+---
+
+### Feature: Video Embeds - URL
+**Complexity:** medium
+
+**Description:** Embed videos from YouTube, Vimeo, etc. by URL.
+
+**Test Cases:**
+- [ ] **YouTube URL**: Paste YouTube link, video embeds automatically
+- [ ] **Vimeo URL**: Paste Vimeo link, video embeds
+- [ ] **Custom video**: Paste direct .mp4 URL, video player appears
+- [ ] **Invalid URL**: Show error for unsupported URLs
+
+**Priority:** low
+
+---
+
+### Feature: File Storage - Uploadthing/S3
+**Complexity:** complex
+
+**Description:** Configure cloud file storage for image and video uploads.
+
+**Sub-Feature: Uploadthing Setup**
+- [ ] **API configured**: Uploadthing API keys in .env
+- [ ] **File route**: /api/upload route handles uploads
+- [ ] **CORS configured**: Uploads work from localhost
+
+**Sub-Feature: S3 Fallback**
+- [ ] **S3 bucket**: S3 bucket created and configured
+- [ ] **Presigned URLs**: Generate presigned URLs for direct uploads
+- [ ] **CDN**: CloudFront CDN configured for files
+
+**Sub-Feature: Local Fallback**
+- [ ] **Local storage**: Fallback to /public/uploads when cloud unavailable
+- [ ] **File system**: Save files with unique names to avoid conflicts
+- [ ] **Cleanup**: Delete files from disk when note is deleted
+
+**Priority:** high
+
+---
+
+### Feature: Note Share
+**Complexity:** simple
+
+**Description:** Generate shareable links for notes (view-only).
+
+**Test Cases:**
+- [ ] **Share button**: Click share in note menu, generate unique link
+- [ ] **Public access**: Open share link in incognito, note viewable without login
+- [ ] **Revoke**: Click "Revoke access", link stops working
+- [ ] **Copy link**: Button copies link to clipboard
+
+**Priority:** low
+
+---
+
+### Feature: Dark Mode
+**Complexity:** simple
+
+**Description:** Toggle between light and dark mode theme.
+
+**Test Cases:**
+- [ ] **Toggle button**: Click moon/sun icon, theme switches
+- [ ] **Persistence**: Refresh page, theme preference saved
+- [ ] **System preference**: Respects prefers-color-scheme on first visit
+- [ ] **All components**: Sidebar, editor, modals all themed correctly
+
+**Priority:** medium
+
+---
+
+### Feature: Responsive Design
+**Complexity:** simple
+
+**Description:** Mobile-friendly layout with collapsible sidebar and touch-friendly editor.
+
+**Test Cases:**
+- [ ] **Mobile layout**: On phone, sidebar collapses to hamburger menu
+- [ ] **Touch editor**: Editor toolbar buttons are touch-friendly (min 44x44px)
+- [ ] **Swipe gestures**: Swipe from left edge opens sidebar on mobile
+- [ ] **Breakpoints**: Test at 320px, 768px, 1024px, all layouts work
+
+**Priority:** medium
+
+---
+
+### Feature: Loading States
+**Complexity:** simple
+
+**Description:** Skeleton screens and loading spinners for async operations.
+
+**Test Cases:**
+- [ ] **Note list loading**: Skeleton cards show while notes load
+- [ ] **Editor loading**: Spinner shows when opening large note
+- [ ] **Upload progress**: Progress bar shows during file uploads
+- [ ] **Button states**: Buttons show loading spinner during async actions
+
+**Priority:** low
+
+---
+
+### Feature: Error Handling
+**Complexity:** simple
+
+**Description:** User-friendly error messages and error boundaries.
+
+**Test Cases:**
+- [ ] **Network errors**: Show toast notification on API failures
+- [ ] **Validation errors**: Show inline errors for invalid inputs
+- [ ] **Error boundary**: Component errors show friendly error page
+- [ ] **Retry buttons**: Error messages include retry button
+
+**Priority:** medium
+
+---
+
+## 4. UI/UX GUIDELINES
+
+### Design Style
+- **Inspiration**: Apple Notes (macOS/iOS)
+- **Minimal**: Clean, lots of white space, subtle shadows
+- **Typography**: System fonts (San Francisco equivalent)
+- **Animations**: Smooth transitions, no jarring movements
+
+### Color Palette (Light Mode)
+- **Primary**: `#007AFF` (Apple Blue)
+- **Background**: `#FFFFFF` (White)
+- **Secondary Background**: `#F5F5F7` (Light Gray)
+- **Text**: `#1D1D1F` (Almost Black)
+- **Secondary Text**: `#86868B` (Gray)
+- **Border**: `#E5E5E7` (Light Border)
+- **Success**: `#34C759` (Green)
+- **Error**: `#FF3B30` (Red)
+
+### Color Palette (Dark Mode)
+- **Primary**: `#0A84FF` (Lighter Blue)
+- **Background**: `#1C1C1E` (Dark Gray)
+- **Secondary Background**: `#2C2C2E` (Medium Dark)
+- **Text**: `#FFFFFF` (White)
+- **Secondary Text**: `#98989D` (Light Gray)
+- **Border**: `#38383A` (Dark Border)
+
+### Key Components
+- **Sidebar**: Left panel, 280px wide, collapsible on mobile
+- **Note List**: Scrollable list in sidebar, 60px height per item
+- **Editor**: Main content area, full-bleed with padding
+- **Toolbar**: Sticky at top of editor, icon-only buttons
+- **Modals**: Centered, backdrop blur, rounded corners (16px)
+
+---
+
+## 5. TECHNICAL CONSTRAINTS
+
+### Must-Have
+- [x] TypeScript strict mode
+- [x] All text stored in database (not file system)
+- [x] Media files stored in cloud or /public
+- [x] Server-side rendering for SEO
+- [x] Responsive design (mobile first)
+
+### Must-Not-Have
+- [ ] No jQuery or legacy libraries
+- [ ] No client-only file uploads (must use API routes)
+- [ ] No hardcoded credentials (use environment variables)
+- [ ] No console.log in production (use proper logging)
+
+---
+
+## 6. SUCCESS CRITERIA
+
+The project is considered complete when:
+1. [ ] All features from Section 3 are implemented
+2. [ ] All test cases pass with screenshots
+3. [ ] App works on mobile, tablet, and desktop
+4. [ ] At least 20 notes can be created without performance issues
+5. [ ] Images up to 5MB and videos up to 100MB upload successfully
+
+---
+
+**IMPORTANT FOR AGENT:**
+- **ONLY implement features listed in Section 3**
+- **DO NOT add features not specified**
+- **ASK if something is unclear**
+- **Use GitHub Issues for tracking (NOT feature_list.json)**
+
+---
+
+## ISSUE CREATION RULES
+
+When creating GitHub Issues from this spec:
+
+**SIMPLE features:**
+- Create 1 Issue titled: "Feature: [Name]"
+- Put all test cases in the issue body
+
+**MEDIUM features (multiple providers):**
+- Create multiple issues:
+  - "Feature: [Name] - [Method A]"
+  - "Feature: [Name] - [Method B]"
+  - Each with its own test cases
+
+**COMPLEX features (multi-step):**
+- Create multiple issues:
+  - "Feature: [Name] - [Sub-feature A]"
+  - "Feature: [Name] - [Sub-feature B]"
+  - Each with its own test cases
