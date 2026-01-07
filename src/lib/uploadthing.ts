@@ -1,3 +1,4 @@
+import React from "react";
 import { createUploadthing } from "uploadthing/next";
 
 const f = createUploadthing();
@@ -69,5 +70,5 @@ export type OurFileRouter = typeof ourFileRouter;
 // Helper function to wrap the provider
 export function UploadThingProvider({ children }: { children: React.ReactNode }) {
   const { UploadThingProvider: UTProvider } = require("@uploadthing/react");
-  return <UTProvider>{children}</UTProvider>;
+  return React.createElement(UTProvider, null, children);
 }
