@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { SessionProvider } from '@/components/SessionProvider'
 
 export const metadata: Metadata = {
   title: 'Notes App',
@@ -19,10 +20,12 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-          <Toaster position="top-right" />
-        </ThemeProvider>
+        <SessionProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            {children}
+            <Toaster position="top-right" />
+          </ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
   )
