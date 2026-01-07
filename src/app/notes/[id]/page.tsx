@@ -50,6 +50,8 @@ export default function NoteEditorPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [titleError, setTitleError] = useState<string | null>(null)
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   // Fetch note on mount
   useEffect(() => {
@@ -247,6 +249,103 @@ export default function NoteEditorPage() {
         addTag(tagName)
       }
     }
+  }
+
+  const handleImageUpload = async (file: File) => {
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.')
+      return
+    }
+
+    // Validate file size
+    const maxSize = 5 * 1024 * 1024 // 5MB
+    if (file.size > maxSize) {
+      toast.error('File size exceeds 5MB limit')
+      return
+    }
+
+    // Create form data
+    const formData = new FormData()
+    formData.append('file', file)
+
+    // Upload with progress
+    setUploadProgress(0)
+
+    try {
+      const xhr = new (window as any).XMLHttpRequest()
+
+      // Track upload progress
+      xhr.upload.addEventListener('progress', (e: any) => {
+        if (e.lengthComputable) {
+          const progress = Math.round((e.loaded / e.total) * 100)
+          setUploadProgress(progress)
+        }
+      })
+
+      // Handle completion
+      xhr.addEventListener('load', () => {
+        if (xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText)
+          // Insert image markdown at cursor position
+          const imageMarkdown = `\n
+![${response.originalName}](${response.url})
+\n`
+          setContent(prev => prev + imageMarkdown)
+          setUploadProgress(null)
+          toast.success('Image uploaded successfully')
+        } else {
+          const error = JSON.parse(xhr.responseText)
+          toast.error(error.error || 'Failed to upload image')
+          setUploadProgress(null)
+        }
+      })
+
+      // Handle error
+      xhr.addEventListener('error', () => {
+        toast.error('Failed to upload image')
+        setUploadProgress(null)
+      })
+
+      xhr.open('POST', '/api/upload')
+      xhr.send(formData)
+
+    } catch (error) {
+      console.error('Upload error:', error)
+      toast.error('Failed to upload image')
+      setUploadProgress(null)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+
+    const files = Array.from((e.dataTransfer as any).files)
+    const imageFiles = files.filter((file: any) => file.type.startsWith('image/'))
+
+    if (imageFiles.length === 0) {
+      toast.error('No image files found')
+      return
+    }
+
+    if (imageFiles.length > 1) {
+      toast.error('Please upload one image at a time')
+      return
+    }
+
+    handleImageUpload(imageFiles[0] as File)
   }
 
   if (loading) {
@@ -456,12 +555,52 @@ export default function NoteEditorPage() {
             </div>
           </div>
 
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Start writing your note..."
-            className="w-full min-h-[500px] text-lg text-gray-700 placeholder-gray-400 border-none outline-none resize-none bg-transparent leading-relaxed"
-          />
+          {/* Upload Progress */}
+          {uploadProgress !== null && (
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-blue-900">Uploading image...</span>
+                <span className="text-sm text-blue-700">{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-blue-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Drag & Drop Zone */}
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`relative transition-all duration-200 ${
+              isDragging
+                ? 'ring-4 ring-blue-500 bg-blue-50'
+                : ''
+            }`}
+          >
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Start writing your note... (Drag & drop images here)"
+              className="w-full min-h-[500px] text-lg text-gray-700 placeholder-gray-400 border-none outline-none resize-none bg-transparent leading-relaxed"
+            />
+
+            {isDragging && (
+              <div className="absolute inset-0 flex items-center justify-center bg-blue-50 bg-opacity-90 rounded-lg pointer-events-none">
+                <div className="text-center">
+                  <svg className="w-16 h-16 mx-auto text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-xl font-semibold text-blue-600">Drop image to upload</p>
+                  <p className="text-sm text-blue-500 mt-2">JPG, PNG, GIF, WEBP (max 5MB)</p>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Auto-save indicator */}
           <div className="mt-8 pt-4 border-t border-gray-100">
