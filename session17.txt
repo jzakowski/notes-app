@@ -1,0 +1,17 @@
+## Session 17 - 2026-01-07 - CODING AGENT
+
+Feature Implemented:
+- Feature #12: Tag Selection and Tag Filtering
+- Issue: https://github.com/jzakowski/notes-app/issues/12
+- Pull Request: #39 (merged)
+
+Changes Made:
+- Modified src/app/api/notes/route.ts: Added support for tagIds query parameter
+- Updated src/components/NotesSidebar.tsx with tag selection functionality
+- Multi-tag AND logic implemented
+- Visual feedback for selected tags (blue background + checkmark)
+- Selected tag chips with remove buttons
+- Clear selections button
+- URL persistence for selections
+
+All acceptance criteria met. Feature is complete and merged.
