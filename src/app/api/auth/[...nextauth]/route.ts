@@ -19,7 +19,10 @@ export const authOptions: AuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        console.log('[Auth] Authorize attempt:', { email: credentials?.email });
+
         if (!credentials?.email || !credentials?.password) {
+          console.log('[Auth] Missing credentials');
           throw new Error("Invalid credentials");
         }
 
@@ -30,6 +33,7 @@ export const authOptions: AuthOptions = {
         });
 
         if (!user || !user.password) {
+          console.log('[Auth] User not found or no password:', { email: credentials.email, userFound: !!user, hasPassword: !!user?.password });
           throw new Error("Invalid credentials");
         }
 
@@ -39,8 +43,11 @@ export const authOptions: AuthOptions = {
         );
 
         if (!isCorrectPassword) {
+          console.log('[Auth] Password mismatch');
           throw new Error("Invalid credentials");
         }
+
+        console.log('[Auth] Login successful for:', user.email);
 
         return {
           id: user.id,
