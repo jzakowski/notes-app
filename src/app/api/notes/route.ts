@@ -2,10 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // GET all notes
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const categoryId = searchParams.get('categoryId')
+
+    // Build where clause for filtering
+    const where: any = {}
+    if (categoryId) {
+      where.categoryId = categoryId
+    }
+
     // For now, get all notes (authentication will be added later)
     const notes = await prisma.note.findMany({
+      where,
       orderBy: {
         updatedAt: 'desc'
       },

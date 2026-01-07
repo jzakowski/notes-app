@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import NotesSidebar from '@/components/NotesSidebar'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import toast from 'react-hot-toast'
@@ -29,6 +29,8 @@ interface Tag {
 export default function NoteEditorPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const filterCategoryId = searchParams.get('category')
   const noteId = params.id as string
 
   const [note, setNote] = useState<Note | null>(null)
@@ -263,7 +265,7 @@ export default function NoteEditorPage() {
     <ErrorBoundary>
       <div className="flex h-screen bg-white overflow-hidden">
         {/* Sidebar */}
-        <NotesSidebar currentNoteId={noteId} />
+        <NotesSidebar currentNoteId={noteId} categoryId={filterCategoryId} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">

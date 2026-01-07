@@ -27,9 +27,10 @@ interface Tag {
 
 interface NotesSidebarProps {
   currentNoteId?: string
+  categoryId?: string | null
 }
 
-export default function NotesSidebar({ currentNoteId }: NotesSidebarProps) {
+export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebarProps) {
   const [notes, setNotes] = useState<Note[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
@@ -194,13 +195,16 @@ export default function NotesSidebar({ currentNoteId }: NotesSidebarProps) {
     }
   }
 
-  // Filter notes based on search query
+  // Filter notes based on search query and category
   const filteredNotes = notes.filter(note => {
     const query = searchQuery.toLowerCase()
-    return (
+    const matchesSearch =
       note.title.toLowerCase().includes(query) ||
       note.content.toLowerCase().includes(query)
-    )
+
+    const matchesCategory = !categoryId || note.categoryId === categoryId
+
+    return matchesSearch && matchesCategory
   })
 
   // Format date for display
@@ -295,6 +299,27 @@ export default function NotesSidebar({ currentNoteId }: NotesSidebarProps) {
                 <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
+
+            {/* Category Filter */}
+            {categories.length > 0 && (
+              <div className="mb-3">
+                <select
+                  value={categoryId || 'all'}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    router.push(value === 'all' ? '/notes' : `/notes?category=${value}`)
+                  }}
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-700"
+                >
+                  <option value="all">All Notes</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name} ({category._count?.notes || 0})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* New Note Button */}
             <button

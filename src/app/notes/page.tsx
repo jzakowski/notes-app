@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import NotesSidebar from '@/components/NotesSidebar'
 import toast from 'react-hot-toast'
 
@@ -14,17 +14,20 @@ interface Note {
 
 export default function NotesListPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const filterCategoryId = searchParams.get('category')
   const [notes, setNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchNotes()
-  }, [])
+  }, [filterCategoryId])
 
   const fetchNotes = async () => {
     try {
-      const response = await fetch('/api/notes')
+      const url = filterCategoryId ? `/api/notes?categoryId=${filterCategoryId}` : '/api/notes'
+      const response = await fetch(url)
       if (!response.ok) throw new Error('Failed to fetch notes')
       const data = await response.json()
 
@@ -83,7 +86,7 @@ export default function NotesListPage() {
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       {/* Sidebar */}
-      <NotesSidebar />
+      <NotesSidebar categoryId={filterCategoryId} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center overflow-hidden">
