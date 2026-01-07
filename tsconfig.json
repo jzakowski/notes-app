@@ -31,6 +31,10 @@
     "incremental": true,
     "esModuleInterop": true,
     "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "plugins": [
       {
         "name": "next"
