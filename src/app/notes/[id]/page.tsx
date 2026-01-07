@@ -10,7 +10,15 @@ interface Note {
   id: string
   title: string
   content: string
+  categoryId: string | null
+  category: { id: string; name: string; color: string } | null
   updatedAt: string
+}
+
+interface Category {
+  id: string
+  name: string
+  color: string
 }
 
 export default function NoteEditorPage() {
@@ -21,6 +29,8 @@ export default function NoteEditorPage() {
   const [note, setNote] = useState<Note | null>(null)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [categoryId, setCategoryId] = useState<string | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +41,19 @@ export default function NoteEditorPage() {
   // Fetch note on mount
   useEffect(() => {
     fetchNote()
+    fetchCategories()
   }, [noteId])
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories')
+      if (!response.ok) throw new Error('Failed to fetch categories')
+      const data = await response.json()
+      setCategories(data)
+    } catch (err) {
+      console.error('Failed to fetch categories:', err)
+    }
+  }
 
   const fetchNote = async () => {
     try {
@@ -48,6 +70,7 @@ export default function NoteEditorPage() {
       setNote(data)
       setTitle(data.title)
       setContent(data.content)
+      setCategoryId(data.categoryId)
       setLastSaved(new Date(data.updatedAt))
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred'
@@ -67,7 +90,7 @@ export default function NoteEditorPage() {
       const response = await fetch(`/api/notes/${noteId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content })
+        body: JSON.stringify({ title, content, categoryId })
       })
 
       if (!response.ok) {
@@ -88,7 +111,7 @@ export default function NoteEditorPage() {
     } finally {
       setSaving(false)
     }
-  }, [noteId, title, content, note, saving])
+  }, [noteId, title, content, categoryId, note, saving])
 
   // Debounced save
   useEffect(() => {
@@ -146,7 +169,21 @@ export default function NoteEditorPage() {
         <div className="border-b border-gray-200 bg-white">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex-1" />
+              <div className="flex-1">
+                {/* Category Selector */}
+                <select
+                  value={categoryId || ''}
+                  onChange={(e) => setCategoryId(e.target.value || null)}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">No Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex items-center gap-3">
                 {saving && (
                   <span className="text-sm text-gray-500">Saving...</span>

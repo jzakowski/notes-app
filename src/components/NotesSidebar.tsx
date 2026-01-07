@@ -9,6 +9,14 @@ interface Note {
   title: string
   content: string
   updatedAt: string
+  categoryId: string | null
+}
+
+interface Category {
+  id: string
+  name: string
+  color: string
+  _count?: { notes: number }
 }
 
 interface NotesSidebarProps {
@@ -17,14 +25,19 @@ interface NotesSidebarProps {
 
 export default function NotesSidebar({ currentNoteId }: NotesSidebarProps) {
   const [notes, setNotes] = useState<Note[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryColor, setNewCategoryColor] = useState('#3B82F6')
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
     fetchNotes()
+    fetchCategories()
   }, [])
 
   const fetchNotes = async () => {
@@ -42,6 +55,65 @@ export default function NotesSidebar({ currentNoteId }: NotesSidebarProps) {
       console.error('Failed to fetch notes:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories')
+      if (!response.ok) throw new Error('Failed to fetch categories')
+      const data = await response.json()
+      setCategories(data)
+    } catch (err) {
+      console.error('Failed to fetch categories:', err)
+    }
+  }
+
+  const createCategory = async () => {
+    if (!newCategoryName.trim()) return
+
+    try {
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newCategoryName.trim(),
+          color: newCategoryColor
+        })
+      })
+
+      if (!response.ok) throw new Error('Failed to create category')
+
+      const newCategory = await response.json()
+      setCategories([...categories, newCategory])
+      setShowCategoryModal(false)
+      setNewCategoryName('')
+      setNewCategoryColor('#3B82F6')
+    } catch (err) {
+      console.error('Failed to create category:', err)
+      alert('Failed to create category')
+    }
+  }
+
+  const deleteCategory = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!confirm('Delete this category? Notes will be moved to Uncategorized.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/categories/${id}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) throw new Error('Failed to delete category')
+
+      setCategories(categories.filter(cat => cat.id !== id))
+    } catch (err) {
+      console.error('Failed to delete category:', err)
+      alert('Failed to delete category')
     }
   }
 
@@ -208,11 +280,67 @@ export default function NotesSidebar({ currentNoteId }: NotesSidebarProps) {
             {/* New Note Button */}
             <button
               onClick={createNewNote}
-              className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+              className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium mb-3"
             >
               + New Note
             </button>
+
+            {/* New Category Button */}
+            <button
+              onClick={() => setShowCategoryModal(true)}
+              className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+            >
+              + New Category
+            </button>
           </div>
+
+          {/* Categories Section */}
+          {categories.length > 0 && (
+            <div className="border-b border-gray-200">
+              <div className="px-4 py-2 bg-gray-50">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Categories
+                </h3>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {categories.map((category) => (
+                  <div
+                    key={category.id}
+                    className="px-4 py-2 hover:bg-gray-50 flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <span className="text-sm text-gray-700 truncate">
+                        {category.name}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {category._count?.notes || 0}
+                      </span>
+                    </div>
+                    <button
+                      onClick={(e) => deleteCategory(category.id, e)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-all"
+                    >
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Notes List */}
           <div className="flex-1 overflow-y-auto">
@@ -284,6 +412,68 @@ export default function NotesSidebar({ currentNoteId }: NotesSidebarProps) {
           className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
+      )}
+
+      {/* Create Category Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl w-full">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Create New Category
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="e.g., Work, Personal, Ideas"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Color
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'].map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setNewCategoryColor(color)}
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${
+                        newCategoryColor === color ? 'border-gray-900 scale-110' : 'border-gray-300'
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end mt-6">
+              <button
+                onClick={() => {
+                  setShowCategoryModal(false)
+                  setNewCategoryName('')
+                  setNewCategoryColor('#3B82F6')
+                }}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={createCategory}
+                disabled={!newCategoryName.trim()}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )
