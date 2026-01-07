@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import NotesSidebar from '@/components/NotesSidebar'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -52,6 +52,8 @@ export default function NoteEditorPage() {
   const [titleError, setTitleError] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const imageInputRef = React.useRef<HTMLInputElement>(null)
+  const videoInputRef = React.useRef<HTMLInputElement>(null)
 
   // Fetch note on mount
   useEffect(() => {
@@ -382,6 +384,44 @@ Your browser does not support the video tag.
     }
   }
 
+  const handleImagePickerClick = () => {
+    imageInputRef.current?.click()
+  }
+
+  const handleVideoPickerClick = () => {
+    videoInputRef.current?.click()
+  }
+
+  const handleImageFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    const file = files[0]
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+
+    await handleImageUpload(file)
+    // Reset input so same file can be selected again
+    e.target.value = ''
+  }
+
+  const handleVideoFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    const file = files[0]
+    if (!file.type.startsWith('video/')) {
+      toast.error('Please select a video file')
+      return
+    }
+
+    await handleImageUpload(file)
+    // Reset input so same file can be selected again
+    e.target.value = ''
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
@@ -604,6 +644,57 @@ Your browser does not support the video tag.
               </div>
             </div>
           )}
+
+          {/* Editor Toolbar */}
+          <div className="mb-3 flex items-center gap-2 pb-3 border-b border-gray-200">
+            <button
+              onClick={handleImagePickerClick}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors min-h-[40px]"
+              title="Insert image"
+              aria-label="Insert image"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>Image</span>
+            </button>
+
+            <button
+              onClick={handleVideoPickerClick}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors min-h-[40px]"
+              title="Insert video"
+              aria-label="Insert video"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <span>Video</span>
+            </button>
+
+            <div className="flex-1" />
+
+            <span className="text-xs text-gray-400">
+              Or drag & drop files below
+            </span>
+          </div>
+
+          {/* Hidden File Inputs */}
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageFileSelect}
+            className="hidden"
+            aria-label="Select image file"
+          />
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/*"
+            onChange={handleVideoFileSelect}
+            className="hidden"
+            aria-label="Select video file"
+          />
 
           {/* Drag & Drop Zone */}
           <div
