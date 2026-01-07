@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { deleteS3File } from '@/lib/s3'
+import { unlink } from 'fs/promises'
+import { existsSync } from 'fs'
+import path from 'path'
 
 // GET single note
 export async function GET(
@@ -93,6 +97,40 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Get note with attachments before deleting
+    const note = await prisma.note.findUnique({
+      where: { id: params.id },
+      include: { attachments: true }
+    })
+
+    if (!note) {
+      return NextResponse.json({ error: 'Note not found' }, { status: 404 })
+    }
+
+    // Delete all attachments from S3 or local storage
+    for (const attachment of note.attachments) {
+      const url = attachment.url
+
+      // Try S3 deletion first
+      const s3Deleted = await deleteS3File(url)
+
+      // If S3 deletion failed or returned false, try local file deletion
+      if (!s3Deleted && url.startsWith('/uploads/')) {
+        const filename = url.replace('/uploads/', '')
+        const filepath = path.join(process.cwd(), 'public', 'uploads', filename)
+
+        if (existsSync(filepath)) {
+          try {
+            await unlink(filepath)
+            console.log(`Deleted local file: ${filepath}`)
+          } catch (error) {
+            console.error(`Failed to delete local file: ${filepath}`, error)
+          }
+        }
+      }
+    }
+
+    // Delete the note (attachments will be cascade deleted from DB)
     await prisma.note.delete({
       where: { id: params.id }
     })

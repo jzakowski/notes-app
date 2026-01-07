@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
+import { writeFile, mkdir, unlink } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
+import { generatePresignedUploadUrl, isS3Available } from '@/lib/s3'
 
 // Allowed file types
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
@@ -66,7 +67,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create uploads directory if it doesn't exist
+    // Try S3 first if configured
+    if (isS3Available()) {
+      console.log('Upload - Using S3 storage')
+      const presignedUrl = await generatePresignedUploadUrl(file.name, file.type)
+
+      if (presignedUrl) {
+        // Return presigned URL for direct client-side upload
+        return NextResponse.json({
+          uploadUrl: presignedUrl.uploadUrl,
+          fileUrl: presignedUrl.fileUrl,
+          storageType: 's3',
+          originalName: file.name,
+          size: file.size,
+          type: file.type,
+          category: isVideo ? 'video' : 'image'
+        })
+      } else {
+        console.log('Upload - S3 unavailable, falling back to local storage')
+      }
+    } else {
+      console.log('Upload - S3 not configured, using local storage')
+    }
+
+    // Fallback to local storage
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
     if (!existsSync(uploadsDir)) {
       await mkdir(uploadsDir, { recursive: true })
@@ -88,10 +112,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       url: fileUrl,
       filename: uniqueFilename,
+      storageType: 'local',
       originalName: file.name,
       size: file.size,
       type: file.type,
-      category: isVideo ? 'video' : 'image'
+      category: isVideo ? 'video' : 'image',
+      warning: 'Using local storage - files will be lost if server is reset'
     })
 
   } catch (error) {
