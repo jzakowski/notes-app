@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { signOut, useSession } from 'next-auth/react'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -36,6 +36,8 @@ interface NotesSidebarProps {
 
 export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebarProps) {
   const { data: session } = useSession()
+  const searchParams = useSearchParams()
+  const selectedTagIds = searchParams.getAll('tagIds') || []
   const [notes, setNotes] = useState<Note[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
@@ -92,7 +94,7 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
     fetchNotes()
     fetchCategories()
     fetchTags()
-  }, [])
+  }, [selectedTagIds])
 
   // Keyboard shortcut: Cmd+/ or Ctrl+/ to focus search
   useEffect(() => {
@@ -121,7 +123,12 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
 
   const fetchNotes = async () => {
     try {
-      const response = await fetch('/api/notes')
+      // Build URL with tag filters
+      const urlParams = new URLSearchParams()
+      selectedTagIds.forEach(tagId => urlParams.append('tagIds', tagId))
+
+      const url = urlParams.toString() ? `/api/notes?${urlParams.toString()}` : '/api/notes'
+      const response = await fetch(url)
       if (!response.ok) throw new Error('Failed to fetch notes')
       const data = await response.json()
 
@@ -276,6 +283,42 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
       setDeletingNoteId(null)
     }
   }
+
+  // Toggle tag filter
+  const toggleTagFilter = (tagId: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    if (selectedTagIds.includes(tagId)) {
+      // Remove tag filter
+      const newTagIds = selectedTagIds.filter(id => id !== tagId)
+      params.delete('tagIds')
+      newTagIds.forEach(id => params.append('tagIds', id))
+    } else {
+      // Add tag filter
+      params.append('tagIds', tagId)
+    }
+
+    // Update URL without navigating
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+    router.push(newUrl)
+  }
+
+  // Clear all tag filters
+  const clearTagFilters = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('tagIds')
+
+    // Keep category filter if exists
+    if (categoryId) {
+      params.set('category', categoryId)
+    }
+
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+    router.push(newUrl)
+  }
+
+  // Get selected tag objects
+  const selectedTags = tags.filter(tag => selectedTagIds.includes(tag.id))
 
   // Filter notes based on search query and category
   const filteredNotes = notes.filter(note => {
@@ -520,25 +563,82 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
           {/* Tags Section */}
           {tags.length > 0 && (
             <div className="border-b border-gray-200 dark:border-gray-700">
-              <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800">
+              <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
                 <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                   Tags
                 </h3>
+                {selectedTagIds.length > 0 && (
+                  <button
+                    onClick={clearTagFilters}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
+                  >
+                    Clear filters
+                  </button>
+                )}
               </div>
+
+              {/* Selected tag chips */}
+              {selectedTags.length > 0 && (
+                <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700">
+                  {selectedTags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      onClick={() => toggleTagFilter(tag.id)}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                    >
+                      #{tag.name}
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div className="divide-y divide-gray-100 dark:divide-gray-800">
                 {tags.map((tag) => (
                   <div
                     key={tag.id}
-                    className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between group"
+                    onClick={() => toggleTagFilter(tag.id)}
+                    className={`px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between group cursor-pointer transition-colors ${
+                      selectedTagIds.includes(tag.id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                    }`}
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                      <span className={`text-sm font-medium ${
+                        selectedTagIds.includes(tag.id)
+                          ? 'text-blue-700 dark:text-blue-300'
+                          : 'text-blue-600 dark:text-blue-400'
+                      }`}>
                         #{tag.name}
                       </span>
                       <span className="text-xs text-gray-400 dark:text-gray-500">
                         {tag._count?.noteTags || 0}
                       </span>
                     </div>
+                    {selectedTagIds.includes(tag.id) && (
+                      <svg
+                        className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
                   </div>
                 ))}
               </div>

@@ -2049,3 +2049,33 @@ The app now supports THREE storage options:
 **App State:** Uploadthing infrastructure ready for configuration
 **Code Quality:** Excellent - follows Uploadthing best practices
 
+
+## Session N - [DATE] - CODING AGENT
+
+**Bug Fixes:**
+- Fixed Uploadthing configuration error - separated image and video uploaders into distinct routes
+- Removed invalid UploadThingProvider wrapper that was causing compilation errors
+- App now compiles cleanly without errors
+
+**Feature Implemented:**
+- Feature #27: Loading States
+- Pull Request: https://github.com/jzakowski/notes-app/pull/38 (merged)
+
+**Changes Made:**
+- Created src/components/Skeleton.tsx with NoteCardSkeleton, EditorSkeleton, and ButtonSkeleton components
+- Updated src/components/NotesSidebar.tsx:
+  - Added loading state variables (creating, creatingCategory, deletingNoteId, deletingCategoryId)
+  - Updated createNewNote function to show loading state
+  - Updated createCategory function to show loading state
+  - Updated deleteNote function to show loading state
+  - Updated deleteCategory function to show loading state
+  - Updated all async buttons to display spinner and disable during operations
+- All async operations now provide visual feedback to users
+
+**Tests Passing:** Updated to include loading states feature
+
+**Next Steps:**
+- Continue working on remaining TODO issues
+- Test loading states with manual browser testing
+- Consider adding progress indicators for file uploads (if not handled by UploadThing)
+
