@@ -436,22 +436,22 @@ Your browser does not support the video tag.
 
   if (!note) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-gray-600">Note not found</div>
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-gray-600 dark:text-gray-400">Note not found</div>
       </div>
     )
   }
 
   return (
     <ErrorBoundary>
-      <div className="flex h-screen bg-white overflow-hidden">
+      <div className="flex h-screen bg-white dark:bg-gray-900 overflow-hidden">
         {/* Sidebar */}
         <NotesSidebar currentNoteId={noteId} categoryId={filterCategoryId} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         {/* Header */}
-        <div className="border-b border-gray-200 bg-white">
+        <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -459,7 +459,7 @@ Your browser does not support the video tag.
                 <select
                   value={categoryId || ''}
                   onChange={(e) => setCategoryId(e.target.value || null)}
-                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">No Category</option>
                   {categories.map((cat) => (
@@ -480,7 +480,7 @@ Your browser does not support the video tag.
                 )}
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="px-4 py-2 min-h-[40px] text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="px-4 py-2 min-h-[40px] text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                 >
                   Delete
                 </button>
@@ -514,16 +514,16 @@ Your browser does not support the video tag.
 
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Note?</h3>
-              <p className="text-gray-600 mb-6">
+          <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4 shadow-xl">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Delete Note?</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
                 Are you sure you want to delete "{title}"? This action cannot be undone.
               </p>
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-3 min-h-[44px] text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-4 py-3 min-h-[44px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
@@ -563,12 +563,12 @@ Your browser does not support the video tag.
                 }
               }}
               placeholder="Note title"
-              className={`w-full text-3xl font-bold text-gray-900 placeholder-gray-400 border-none outline-none bg-transparent ${
+              className={`w-full text-3xl font-bold text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 border-none outline-none bg-transparent ${
                 titleError ? 'border-b-2 border-red-500' : ''
               }`}
             />
             {titleError && (
-              <p className="mt-2 text-sm text-red-600">{titleError}</p>
+              <p className="mt-2 text-sm text-red-600 dark:text-red-400">{titleError}</p>
             )}
           </div>
 
@@ -604,12 +604,12 @@ Your browser does not support the video tag.
                 onChange={(e) => handleTagInputChange(e.target.value)}
                 onKeyDown={handleTagInputKeyDown}
                 placeholder="Add tags (type #tagname)"
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
 
               {/* Tag Suggestions Dropdown */}
               {showTagSuggestions && allTags.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {allTags
                     .filter(tag =>
                       tag.name.toLowerCase().includes(tagInput.replace(/^#/, '').toLowerCase()) &&
@@ -619,10 +619,10 @@ Your browser does not support the video tag.
                       <button
                         key={tag.id}
                         onClick={() => addTag(tag.name)}
-                        className="w-full px-3 py-2 text-left hover:bg-gray-100 flex items-center justify-between"
+                        className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between"
                       >
-                        <span className="text-sm">#{tag.name}</span>
-                        <span className="text-xs text-gray-500">Click to add</span>
+                        <span className="text-sm dark:text-gray-200">#{tag.name}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Click to add</span>
                       </button>
                     ))}
                 </div>
@@ -654,8 +654,8 @@ Your browser does not support the video tag.
           />
 
           {/* Auto-save indicator */}
-          <div className="mt-8 pt-4 border-t border-gray-100">
-            <p className="text-sm text-gray-400">
+          <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Changes are saved automatically
             </p>
           </div>
