@@ -253,16 +253,28 @@ export default function NoteEditorPage() {
 
   const handleImageUpload = async (file: File) => {
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.')
+    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    const allowedVideoTypes = ['video/mp4', 'video/quicktime', 'video/webm']
+
+    const isImage = allowedImageTypes.includes(file.type)
+    const isVideo = allowedVideoTypes.includes(file.type)
+
+    if (!isImage && !isVideo) {
+      toast.error('Invalid file type. Only JPG, PNG, GIF, WEBP, MP4, MOV, and WEBM are allowed.')
       return
     }
 
     // Validate file size
-    const maxSize = 5 * 1024 * 1024 // 5MB
-    if (file.size > maxSize) {
-      toast.error('File size exceeds 5MB limit')
+    const maxImageSize = 5 * 1024 * 1024 // 5MB
+    const maxVideoSize = 100 * 1024 * 1024 // 100MB
+
+    if (isImage && file.size > maxImageSize) {
+      toast.error('Image size exceeds 5MB limit')
+      return
+    }
+
+    if (isVideo && file.size > maxVideoSize) {
+      toast.error('Video size exceeds 100MB limit')
       return
     }
 
@@ -288,23 +300,36 @@ export default function NoteEditorPage() {
       xhr.addEventListener('load', () => {
         if (xhr.status === 200) {
           const response = JSON.parse(xhr.responseText)
-          // Insert image markdown at cursor position
-          const imageMarkdown = `\n
+
+          if (response.category === 'video') {
+            // Insert HTML5 video player markup
+            const videoMarkdown = `\n
+<video src="${response.url}" controls width="100%">
+Your browser does not support the video tag.
+</video>
+\n`
+            setContent(prev => prev + videoMarkdown)
+            setUploadProgress(null)
+            toast.success('Video uploaded successfully')
+          } else {
+            // Insert image markdown
+            const imageMarkdown = `\n
 ![${response.originalName}](${response.url})
 \n`
-          setContent(prev => prev + imageMarkdown)
-          setUploadProgress(null)
-          toast.success('Image uploaded successfully')
+            setContent(prev => prev + imageMarkdown)
+            setUploadProgress(null)
+            toast.success('Image uploaded successfully')
+          }
         } else {
           const error = JSON.parse(xhr.responseText)
-          toast.error(error.error || 'Failed to upload image')
+          toast.error(error.error || 'Failed to upload file')
           setUploadProgress(null)
         }
       })
 
       // Handle error
       xhr.addEventListener('error', () => {
-        toast.error('Failed to upload image')
+        toast.error('Failed to upload file')
         setUploadProgress(null)
       })
 
@@ -313,7 +338,7 @@ export default function NoteEditorPage() {
 
     } catch (error) {
       console.error('Upload error:', error)
-      toast.error('Failed to upload image')
+      toast.error('Failed to upload file')
       setUploadProgress(null)
     }
   }
@@ -334,18 +359,27 @@ export default function NoteEditorPage() {
 
     const files = Array.from((e.dataTransfer as any).files)
     const imageFiles = files.filter((file: any) => file.type.startsWith('image/'))
+    const videoFiles = files.filter((file: any) => file.type.startsWith('video/'))
 
-    if (imageFiles.length === 0) {
-      toast.error('No image files found')
+    if (imageFiles.length === 0 && videoFiles.length === 0) {
+      toast.error('No image or video files found')
       return
     }
 
-    if (imageFiles.length > 1) {
-      toast.error('Please upload one image at a time')
-      return
+    // Prioritize video files if both are present
+    if (videoFiles.length > 0) {
+      if (videoFiles.length > 1) {
+        toast.error('Please upload one video at a time')
+        return
+      }
+      handleImageUpload(videoFiles[0] as File)
+    } else {
+      if (imageFiles.length > 1) {
+        toast.error('Please upload one image at a time')
+        return
+      }
+      handleImageUpload(imageFiles[0] as File)
     }
-
-    handleImageUpload(imageFiles[0] as File)
   }
 
   if (loading) {
@@ -559,7 +593,7 @@ export default function NoteEditorPage() {
           {uploadProgress !== null && (
             <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-blue-900">Uploading image...</span>
+                <span className="text-sm font-medium text-blue-900">Uploading file...</span>
                 <span className="text-sm text-blue-700">{uploadProgress}%</span>
               </div>
               <div className="w-full bg-blue-200 rounded-full h-2">
@@ -585,7 +619,7 @@ export default function NoteEditorPage() {
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Start writing your note... (Drag & drop images here)"
+              placeholder="Start writing your note... (Drag & drop images or videos here)"
               className="w-full min-h-[500px] text-lg text-gray-700 placeholder-gray-400 border-none outline-none resize-none bg-transparent leading-relaxed"
             />
 
@@ -593,10 +627,11 @@ export default function NoteEditorPage() {
               <div className="absolute inset-0 flex items-center justify-center bg-blue-50 bg-opacity-90 rounded-lg pointer-events-none">
                 <div className="text-center">
                   <svg className="w-16 h-16 mx-auto text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
-                  <p className="text-xl font-semibold text-blue-600">Drop image to upload</p>
-                  <p className="text-sm text-blue-500 mt-2">JPG, PNG, GIF, WEBP (max 5MB)</p>
+                  <p className="text-xl font-semibold text-blue-600">Drop image or video to upload</p>
+                  <p className="text-sm text-blue-500 mt-2">Images: JPG, PNG, GIF, WEBP (max 5MB)</p>
+                  <p className="text-sm text-blue-500 mt-1">Videos: MP4, MOV, WEBM (max 100MB)</p>
                 </div>
               </div>
             )}

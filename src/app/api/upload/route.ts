@@ -4,9 +4,11 @@ import { existsSync } from 'fs'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
-// Allowed image types
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+// Allowed file types
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm']
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024 // 100MB
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,18 +22,46 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Debug logging
+    console.log('Upload request - File name:', file.name)
+    console.log('Upload request - File type:', file.type)
+    console.log('Upload request - File size:', file.size)
+
+    // Determine if file is image or video
+    let isImage = ALLOWED_IMAGE_TYPES.includes(file.type)
+    let isVideo = ALLOWED_VIDEO_TYPES.includes(file.type)
+
+    // Fallback: check file extension if mime type is not detected
+    if (!isImage && !isVideo) {
+      const ext = file.name.toLowerCase().split('.').pop()
+      if (ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif' || ext === 'webp') {
+        isImage = true
+        console.log('Upload - Detected image from extension:', ext)
+      } else if (ext === 'mp4' || ext === 'mov' || ext === 'webm') {
+        isVideo = true
+        console.log('Upload - Detected video from extension:', ext)
+      }
+    }
+
     // Validate file type
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!isImage && !isVideo) {
       return NextResponse.json(
-        { error: 'Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.' },
+        { error: 'Invalid file type. Only JPG, PNG, GIF, WEBP, MP4, MOV, and WEBM are allowed.' },
         { status: 400 }
       )
     }
 
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
+    // Validate file size based on type
+    if (isImage && file.size > MAX_IMAGE_SIZE) {
       return NextResponse.json(
-        { error: 'File size exceeds 5MB limit' },
+        { error: 'Image size exceeds 5MB limit' },
+        { status: 400 }
+      )
+    }
+
+    if (isVideo && file.size > MAX_VIDEO_SIZE) {
+      return NextResponse.json(
+        { error: 'Video size exceeds 100MB limit' },
         { status: 400 }
       )
     }
@@ -60,7 +90,8 @@ export async function POST(request: NextRequest) {
       filename: uniqueFilename,
       originalName: file.name,
       size: file.size,
-      type: file.type
+      type: file.type,
+      category: isVideo ? 'video' : 'image'
     })
 
   } catch (error) {
