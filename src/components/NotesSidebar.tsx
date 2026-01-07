@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { signOut, useSession } from 'next-auth/react'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import NoteCardSkeleton from '@/components/NoteCardSkeleton'
+import Spinner from '@/components/Spinner'
 
 interface Note {
   id: string
@@ -39,6 +40,10 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null)
+  const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -157,6 +162,7 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
   const createCategory = async () => {
     if (!newCategoryName.trim()) return
 
+    setCreatingCategory(true)
     try {
       const response = await fetch('/api/categories', {
         method: 'POST',
@@ -177,6 +183,8 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
     } catch (err) {
       console.error('Failed to create category:', err)
       alert('Failed to create category')
+    } finally {
+      setCreatingCategory(false)
     }
   }
 
@@ -188,6 +196,7 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
       return
     }
 
+    setDeletingCategoryId(id)
     try {
       const response = await fetch(`/api/categories/${id}`, {
         method: 'DELETE'
@@ -199,10 +208,13 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
     } catch (err) {
       console.error('Failed to delete category:', err)
       alert('Failed to delete category')
+    } finally {
+      setDeletingCategoryId(null)
     }
   }
 
   const createNewNote = async () => {
+    setCreating(true)
     try {
       const response = await fetch('/api/notes', {
         method: 'POST',
@@ -227,6 +239,8 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
       setIsMobileMenuOpen(false)
     } catch (err) {
       console.error('Failed to create note:', err)
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -238,6 +252,7 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
       return
     }
 
+    setDeletingNoteId(id)
     try {
       const response = await fetch(`/api/notes/${id}`, {
         method: 'DELETE'
@@ -257,6 +272,8 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
       setIsMobileMenuOpen(false)
     } catch (err) {
       console.error('Failed to delete note:', err)
+    } finally {
+      setDeletingNoteId(null)
     }
   }
 
@@ -424,9 +441,17 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
             {/* New Note Button */}
             <button
               onClick={createNewNote}
-              className="w-full px-4 py-3 min-h-[44px] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium mb-3"
+              disabled={creating}
+              className="w-full px-4 py-3 min-h-[44px] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium mb-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              + New Note
+              {creating ? (
+                <>
+                  <Spinner size="sm" className="text-white" />
+                  Creating...
+                </>
+              ) : (
+                '+ New Note'
+              )}
             </button>
 
             {/* New Category Button */}
@@ -466,20 +491,25 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
                     </div>
                     <button
                       onClick={(e) => deleteCategory(category.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-2 min-w-[36px] min-h-[36px] text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all"
+                      disabled={deletingCategoryId === category.id}
+                      className="opacity-0 group-hover:opacity-100 p-2 min-w-[36px] min-h-[36px] text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Delete category"
                     >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      {deletingCategoryId === category.id ? (
+                        <Spinner size="sm" className="text-red-600 w-4 h-4" />
+                      ) : (
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      )}
                     </button>
                   </div>
                 ))}
@@ -554,20 +584,25 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
                       </div>
                       <button
                         onClick={(e) => deleteNote(note.id, e)}
-                        className="ml-2 p-2 min-w-[36px] min-h-[36px] text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                        disabled={deletingNoteId === note.id}
+                        className="ml-2 p-2 min-w-[36px] min-h-[36px] text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Delete note"
                       >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        {deletingNoteId === note.id ? (
+                          <Spinner size="sm" className="text-red-600" />
+                        ) : (
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        )}
                       </button>
                     </div>
                   </Link>
@@ -643,10 +678,17 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
               </button>
               <button
                 onClick={createCategory}
-                disabled={!newCategoryName.trim()}
-                className="px-4 py-3 min-h-[44px] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+                disabled={!newCategoryName.trim() || creatingCategory}
+                className="px-4 py-3 min-h-[44px] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Create
+                {creatingCategory ? (
+                  <>
+                    <Spinner size="sm" className="text-white" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create'
+                )}
               </button>
             </div>
           </div>
