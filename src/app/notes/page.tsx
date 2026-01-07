@@ -108,7 +108,7 @@ export default function NotesListPage() {
             <button
               onClick={createNewNote}
               disabled={creating}
-              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-4 min-h-[52px] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {creating ? (
                 <>

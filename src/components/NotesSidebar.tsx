@@ -46,6 +46,37 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
   const router = useRouter()
   const pathname = usePathname()
 
+  // Swipe gesture detection
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+
+  const minSwipeDistance = 50
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    if (isRightSwipe && !isMobileMenuOpen) {
+      // Swipe from left edge opens sidebar
+      setIsMobileMenuOpen(true)
+    } else if (isLeftSwipe && isMobileMenuOpen) {
+      // Swipe left closes sidebar
+      setIsMobileMenuOpen(false)
+    }
+  }
+
   useEffect(() => {
     fetchNotes()
     fetchCategories()
@@ -271,7 +302,8 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
       {/* Mobile menu button */}
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-700"
+        className="lg:hidden fixed top-4 left-4 z-50 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 min-w-[44px] min-h-[44px] flex items-center justify-center"
+        aria-label="Toggle menu"
       >
         <svg
           className="w-6 h-6 text-gray-600 dark:text-gray-400"
@@ -298,6 +330,9 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
           transform transition-transform duration-200 ease-in-out
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -316,10 +351,10 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
                 placeholder="Search notes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 pl-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 min-h-[44px] pl-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <svg
-                className="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-2.5"
+                className="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-3.5"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -355,7 +390,7 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
             {/* New Note Button */}
             <button
               onClick={createNewNote}
-              className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium mb-3"
+              className="w-full px-4 py-3 min-h-[44px] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium mb-3"
             >
               + New Note
             </button>
@@ -363,7 +398,7 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
             {/* New Category Button */}
             <button
               onClick={() => setShowCategoryModal(true)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
+              className="w-full px-4 py-3 min-h-[44px] border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
             >
               + New Category
             </button>
@@ -397,10 +432,11 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
                     </div>
                     <button
                       onClick={(e) => deleteCategory(category.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-2 min-w-[36px] min-h-[36px] text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all"
+                      aria-label="Delete category"
                     >
                       <svg
-                        className="w-3 h-3"
+                        className="w-4 h-4"
                         fill="none"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -484,7 +520,8 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
                       </div>
                       <button
                         onClick={(e) => deleteNote(note.id, e)}
-                        className="ml-2 p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                        className="ml-2 p-2 min-w-[36px] min-h-[36px] text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                        aria-label="Delete note"
                       >
                         <svg
                           className="w-4 h-4"
@@ -566,14 +603,14 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
                   setNewCategoryName('')
                   setNewCategoryColor('#3B82F6')
                 }}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="px-4 py-3 min-h-[44px] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={createCategory}
                 disabled={!newCategoryName.trim()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+                className="px-4 py-3 min-h-[44px] bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
               >
                 Create
               </button>
