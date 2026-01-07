@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -37,6 +37,7 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
   const [tags, setTags] = useState<Tag[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showCategoryModal, setShowCategoryModal] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
@@ -49,6 +50,31 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
     fetchCategories()
     fetchTags()
   }, [])
+
+  // Keyboard shortcut: Cmd+/ or Ctrl+/ to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+        e.preventDefault()
+        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement
+        if (searchInput) {
+          searchInput.focus()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Debounced search with 300ms delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const fetchNotes = async () => {
     try {
@@ -198,7 +224,7 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
 
   // Filter notes based on search query and category
   const filteredNotes = notes.filter(note => {
-    const query = searchQuery.toLowerCase()
+    const query = debouncedSearchQuery.toLowerCase()
     const matchesSearch =
       note.title.toLowerCase().includes(query) ||
       note.content.toLowerCase().includes(query)
