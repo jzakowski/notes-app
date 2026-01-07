@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import NotesSidebar from '@/components/NotesSidebar'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import Spinner from '@/components/Spinner'
 import toast from 'react-hot-toast'
 
 interface Note {
@@ -44,6 +45,7 @@ export default function NoteEditorPage() {
   const [showTagSuggestions, setShowTagSuggestions] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -160,6 +162,7 @@ export default function NoteEditorPage() {
   }, [title, content, note, saveNote])
 
   const deleteNote = async () => {
+    setDeleting(true)
     try {
       const response = await fetch(`/api/notes/${noteId}`, {
         method: 'DELETE'
@@ -173,6 +176,7 @@ export default function NoteEditorPage() {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete note'
       toast.error(errorMessage)
       setError(errorMessage)
+      setDeleting(false)
     }
   }
 
@@ -247,8 +251,11 @@ export default function NoteEditorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <Spinner size="lg" className="text-blue-600 dark:text-blue-400" />
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading note...</p>
+        </div>
       </div>
     )
   }
@@ -348,9 +355,17 @@ export default function NoteEditorPage() {
                 </button>
                 <button
                   onClick={deleteNote}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  disabled={deleting}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Delete
+                  {deleting ? (
+                    <>
+                      <Spinner size="sm" className="text-white" />
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete'
+                  )}
                 </button>
               </div>
             </div>

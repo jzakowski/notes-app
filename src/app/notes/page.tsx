@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import NotesSidebar from '@/components/NotesSidebar'
+import Spinner from '@/components/Spinner'
 import toast from 'react-hot-toast'
 
 interface Note {
@@ -18,6 +19,7 @@ export default function NotesListPage() {
   const filterCategoryId = searchParams.get('category')
   const [notes, setNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -53,6 +55,7 @@ export default function NotesListPage() {
   }, [loading, notes, router])
 
   const createNewNote = async () => {
+    setCreating(true)
     try {
       const response = await fetch('/api/notes', {
         method: 'POST',
@@ -72,13 +75,17 @@ export default function NotesListPage() {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create note'
       toast.error(errorMessage)
       setError(errorMessage)
+      setCreating(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-gray-600">Loading notes...</div>
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <Spinner size="lg" className="text-blue-600 dark:text-blue-400" />
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading notes...</p>
+        </div>
       </div>
     )
   }
@@ -100,9 +107,17 @@ export default function NotesListPage() {
             </p>
             <button
               onClick={createNewNote}
-              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-lg"
+              disabled={creating}
+              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              + Create Your First Note
+              {creating ? (
+                <>
+                  <Spinner size="sm" className="text-white" />
+                  Creating...
+                </>
+              ) : (
+                '+ Create Your First Note'
+              )}
             </button>
           </div>
         ) : (

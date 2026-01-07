@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import NoteCardSkeleton from '@/components/NoteCardSkeleton'
 
 interface Note {
   id: string
@@ -447,8 +448,11 @@ export default function NotesSidebar({ currentNoteId, categoryId }: NotesSidebar
           {/* Notes List */}
           <div className="flex-1 overflow-y-auto">
             {loading ? (
-              <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-                Loading notes...
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                {/* Show 5 skeleton cards while loading */}
+                {[...Array(5)].map((_, index) => (
+                  <NoteCardSkeleton key={index} />
+                ))}
               </div>
             ) : filteredNotes.length === 0 ? (
               <div className="p-4 text-center text-gray-500 dark:text-gray-400">
