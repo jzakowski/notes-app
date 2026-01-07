@@ -21,13 +21,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
   if (!editor) return null
 
   return (
-    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 px-3 py-2 mb-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 rounded-t-lg">
+    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 px-3 py-2 mb-3 bg-white border-b border-gray-200 rounded-t-lg">
       {/* Text Formatting */}
-      <div className="flex items-center gap-1 pr-3 border-r border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-1 pr-3 border-r border-gray-200">
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            editor.isActive('bold') ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+          className={`p-2 rounded hover:bg-gray-100 transition-colors ${
+            editor.isActive('bold') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
           }`}
           title="Bold (Cmd+B)"
           aria-label="Toggle bold"
@@ -39,8 +39,8 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
         <button
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            editor.isActive('italic') ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+          className={`p-2 rounded hover:bg-gray-100 transition-colors ${
+            editor.isActive('italic') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
           }`}
           title="Italic (Cmd+I)"
           aria-label="Toggle italic"
@@ -52,8 +52,8 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
         <button
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            editor.isActive('strike') ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+          className={`p-2 rounded hover:bg-gray-100 transition-colors ${
+            editor.isActive('strike') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
           }`}
           title="Strikethrough"
           aria-label="Toggle strikethrough"
@@ -65,8 +65,8 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
         <button
           onClick={() => editor.chain().focus().toggleCode().run()}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            editor.isActive('code') ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+          className={`p-2 rounded hover:bg-gray-100 transition-colors ${
+            editor.isActive('code') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
           }`}
           title="Inline code"
           aria-label="Toggle inline code"
@@ -78,11 +78,11 @@ const MenuBar = ({ editor }: { editor: any }) => {
       </div>
 
       {/* Headings */}
-      <div className="flex items-center gap-1 px-3 border-r border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-1 px-3 border-r border-gray-200">
         <button
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            editor.isActive('heading', { level: 1 }) ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+          className={`p-2 rounded hover:bg-gray-100 transition-colors ${
+            editor.isActive('heading', { level: 1 }) ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
           }`}
           title="Heading 1"
           aria-label="Toggle heading 1"
@@ -92,8 +92,8 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
         <button
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            editor.isActive('heading', { level: 2 }) ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+          className={`p-2 rounded hover:bg-gray-100 transition-colors ${
+            editor.isActive('heading', { level: 2 }) ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
           }`}
           title="Heading 2"
           aria-label="Toggle heading 2"
@@ -103,8 +103,8 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
         <button
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            editor.isActive('heading', { level: 3 }) ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+          className={`p-2 rounded hover:bg-gray-100 transition-colors ${
+            editor.isActive('heading', { level: 3 }) ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
           }`}
           title="Heading 3"
           aria-label="Toggle heading 3"
@@ -114,11 +114,11 @@ const MenuBar = ({ editor }: { editor: any }) => {
       </div>
 
       {/* Lists */}
-      <div className="flex items-center gap-1 px-3 border-r border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-1 px-3 border-r border-gray-200">
         <button
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            editor.isActive('bulletList') ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+          className={`p-2 rounded hover:bg-gray-100 transition-colors ${
+            editor.isActive('bulletList') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
           }`}
           title="Bullet list"
           aria-label="Toggle bullet list"
@@ -130,8 +130,8 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
         <button
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            editor.isActive('orderedList') ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+          className={`p-2 rounded hover:bg-gray-100 transition-colors ${
+            editor.isActive('orderedList') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
           }`}
           title="Numbered list"
           aria-label="Toggle ordered list"
@@ -143,11 +143,11 @@ const MenuBar = ({ editor }: { editor: any }) => {
       </div>
 
       {/* Blocks */}
-      <div className="flex items-center gap-1 px-3 border-r border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-1 px-3 border-r border-gray-200">
         <button
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            editor.isActive('blockquote') ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+          className={`p-2 rounded hover:bg-gray-100 transition-colors ${
+            editor.isActive('blockquote') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
           }`}
           title="Blockquote"
           aria-label="Toggle blockquote"
@@ -159,8 +159,8 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
         <button
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            editor.isActive('codeBlock') ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+          className={`p-2 rounded hover:bg-gray-100 transition-colors ${
+            editor.isActive('codeBlock') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
           }`}
           title="Code block"
           aria-label="Toggle code block"
@@ -172,7 +172,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
         <button
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+          className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-700"
           title="Horizontal rule"
           aria-label="Insert horizontal rule"
         >
@@ -191,8 +191,8 @@ const MenuBar = ({ editor }: { editor: any }) => {
               editor.chain().focus().setLink({ href: url }).run()
             }
           }}
-          className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            editor.isActive('link') ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+          className={`p-2 rounded hover:bg-gray-100 transition-colors ${
+            editor.isActive('link') ? 'bg-blue-100 text-blue-700' : 'text-gray-700'
           }`}
           title="Insert link (Cmd+K)"
           aria-label="Insert link"
@@ -205,7 +205,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
         {editor.isActive('link') && (
           <button
             onClick={() => editor.chain().focus().unsetLink().run()}
-            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-red-600 dark:text-red-400"
+            className="p-2 rounded hover:bg-gray-100 transition-colors text-red-600"
             title="Remove link"
             aria-label="Remove link"
           >
@@ -217,7 +217,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
         <button
           onClick={() => editor.chain().focus().unsetAllMarks().run()}
-          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+          className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-700"
           title="Clear formatting"
           aria-label="Clear formatting"
         >
@@ -230,11 +230,11 @@ const MenuBar = ({ editor }: { editor: any }) => {
       <div className="flex-1" />
 
       {/* Undo/Redo */}
-      <div className="flex items-center gap-1 pl-3 border-l border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-1 pl-3 border-l border-gray-200">
         <button
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
-          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
           title="Undo (Cmd+Z)"
           aria-label="Undo"
         >
@@ -246,7 +246,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
         <button
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
-          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-2 rounded hover:bg-gray-100 transition-colors text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
           title="Redo (Cmd+Shift+Z)"
           aria-label="Redo"
         >
@@ -271,7 +271,7 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-blue-600 dark:text-blue-400 underline cursor-pointer',
+          class: 'text-blue-600 underline cursor-pointer',
         },
       }),
       Image.configure({
@@ -282,7 +282,7 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
       CodeBlockLowlight.configure({
         lowlight,
         HTMLAttributes: {
-          class: 'bg-gray-900 dark:bg-gray-950 text-gray-100 rounded-lg p-4 my-4',
+          class: 'bg-gray-900 text-gray-100 rounded-lg p-4 my-4',
         },
       }),
     ],
@@ -292,7 +292,7 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-invert focus:outline-none max-w-none min-h-[500px] px-3 py-2',
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none max-w-none min-h-[500px] px-3 py-2',
       },
     },
   })
@@ -306,14 +306,14 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
 
   if (!editor) {
     return (
-      <div className="flex items-center justify-center min-h-[500px] bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <div className="text-gray-500 dark:text-gray-400">Loading editor...</div>
+      <div className="flex items-center justify-center min-h-[500px] bg-gray-50 rounded-lg">
+        <div className="text-gray-500">Loading editor...</div>
       </div>
     )
   }
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+    <div className="border border-gray-200 rounded-lg overflow-hidden">
       <MenuBar editor={editor} />
       <EditorContent editor={editor} />
     </div>

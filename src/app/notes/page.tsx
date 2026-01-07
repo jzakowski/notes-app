@@ -91,7 +91,7 @@ export default function NotesListPage() {
   }
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-screen bg-white dark:bg-gray-900 overflow-hidden">
       {/* Sidebar */}
       <NotesSidebar categoryId={filterCategoryId} />
 
@@ -99,10 +99,10 @@ export default function NotesListPage() {
       <div className="flex-1 flex flex-col items-center justify-center overflow-hidden">
         {notes.length === 0 ? (
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Welcome to Notes
             </h1>
-            <p className="text-gray-600 mb-8">
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
               You don't have any notes yet. Create your first note to get started!
             </p>
             <button
@@ -121,13 +121,13 @@ export default function NotesListPage() {
             </button>
           </div>
         ) : (
-          <div className="text-center text-gray-500">
+          <div className="text-center text-gray-500 dark:text-gray-400">
             Loading most recent note...
           </div>
         )}
 
         {error && (
-          <div className="fixed bottom-4 right-4 p-4 bg-red-50 text-red-700 rounded-lg shadow-lg max-w-md">
+          <div className="fixed bottom-4 right-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg shadow-lg max-w-md">
             {error}
           </div>
         )}
