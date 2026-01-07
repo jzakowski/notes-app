@@ -1,7 +1,24 @@
 const puppeteer = require('puppeteer');
+const path = require('path');
 
 (async () => {
-  const browser = await puppeteer.launch({ headless: false });
+  // Use the newly installed Chromium beta 144
+  const chromePath = path.join(
+    process.env.HOME,
+    '.cache/puppeteer/chrome/mac_arm-144.0.7559.31/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'
+  );
+
+  console.log('Launching Chrome from:', chromePath);
+
+  const browser = await puppeteer.launch({
+    headless: false,
+    executablePath: chromePath,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage'
+    ]
+  });
   const page = await browser.newPage();
 
   try {

@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
+// Dev mode check
+const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === "true";
+
 // Google Icon SVG
 const GoogleIcon = () => (
   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -60,6 +63,29 @@ export default function LoginPage() {
     }
   };
 
+  const handleDevLogin = async () => {
+    setLoading(true);
+    try {
+      const result = await signIn("credentials", {
+        email: "dev@notes-app.local",
+        password: "dev123456",
+        redirect: false,
+      });
+
+      if (result?.error) {
+        throw new Error("Dev login failed");
+      }
+
+      toast.success("Logged in as Dev User!");
+      router.push("/notes");
+      router.refresh();
+    } catch (error: any) {
+      toast.error(error.message || "Dev login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -104,6 +130,30 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-8 space-y-4">
+          {isDevMode && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-blue-900">
+                    🚀 Dev Login Available
+                  </p>
+                  <p className="text-xs text-blue-700 mt-1">
+                    Email: <code className="bg-blue-100 px-1 rounded">dev@notes-app.local</code>
+                    <br />
+                    Password: <code className="bg-blue-100 px-1 rounded">dev123456</code>
+                  </p>
+                </div>
+                <button
+                  onClick={handleDevLogin}
+                  disabled={loading}
+                  className="ml-3 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Logging in..." : "Quick Dev Login"}
+                </button>
+              </div>
+            </div>
+          )}
+
           <button
             onClick={handleGoogleSignIn}
             disabled={googleLoading}
