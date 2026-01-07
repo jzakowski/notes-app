@@ -19,6 +19,12 @@ interface Category {
   _count?: { notes: number }
 }
 
+interface Tag {
+  id: string
+  name: string
+  _count?: { noteTags: number }
+}
+
 interface NotesSidebarProps {
   currentNoteId?: string
 }
@@ -26,6 +32,7 @@ interface NotesSidebarProps {
 export default function NotesSidebar({ currentNoteId }: NotesSidebarProps) {
   const [notes, setNotes] = useState<Note[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -38,6 +45,7 @@ export default function NotesSidebar({ currentNoteId }: NotesSidebarProps) {
   useEffect(() => {
     fetchNotes()
     fetchCategories()
+    fetchTags()
   }, [])
 
   const fetchNotes = async () => {
@@ -66,6 +74,17 @@ export default function NotesSidebar({ currentNoteId }: NotesSidebarProps) {
       setCategories(data)
     } catch (err) {
       console.error('Failed to fetch categories:', err)
+    }
+  }
+
+  const fetchTags = async () => {
+    try {
+      const response = await fetch('/api/tags')
+      if (!response.ok) throw new Error('Failed to fetch tags')
+      const data = await response.json()
+      setTags(data)
+    } catch (err) {
+      console.error('Failed to fetch tags:', err)
     }
   }
 
@@ -336,6 +355,34 @@ export default function NotesSidebar({ currentNoteId }: NotesSidebarProps) {
                         <path d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tags Section */}
+          {tags.length > 0 && (
+            <div className="border-b border-gray-200">
+              <div className="px-4 py-2 bg-gray-50">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Tags
+                </h3>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {tags.map((tag) => (
+                  <div
+                    key={tag.id}
+                    className="px-4 py-2 hover:bg-gray-50 flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <span className="text-sm text-blue-600 font-medium">
+                        #{tag.name}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {tag._count?.noteTags || 0}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>

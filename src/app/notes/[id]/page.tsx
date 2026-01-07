@@ -21,6 +21,11 @@ interface Category {
   color: string
 }
 
+interface Tag {
+  id: string
+  name: string
+}
+
 export default function NoteEditorPage() {
   const params = useParams()
   const router = useRouter()
@@ -31,6 +36,10 @@ export default function NoteEditorPage() {
   const [content, setContent] = useState('')
   const [categoryId, setCategoryId] = useState<string | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
+  const [allTags, setAllTags] = useState<Tag[]>([])
+  const [tagInput, setTagInput] = useState('')
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -42,6 +51,8 @@ export default function NoteEditorPage() {
   useEffect(() => {
     fetchNote()
     fetchCategories()
+    fetchTags()
+    fetchNoteTags()
   }, [noteId])
 
   const fetchCategories = async () => {
@@ -52,6 +63,28 @@ export default function NoteEditorPage() {
       setCategories(data)
     } catch (err) {
       console.error('Failed to fetch categories:', err)
+    }
+  }
+
+  const fetchTags = async () => {
+    try {
+      const response = await fetch('/api/tags')
+      if (!response.ok) throw new Error('Failed to fetch tags')
+      const data = await response.json()
+      setAllTags(data)
+    } catch (err) {
+      console.error('Failed to fetch tags:', err)
+    }
+  }
+
+  const fetchNoteTags = async () => {
+    try {
+      const response = await fetch(`/api/notes/${noteId}/tags`)
+      if (!response.ok) throw new Error('Failed to fetch note tags')
+      const data = await response.json()
+      setTags(data)
+    } catch (err) {
+      console.error('Failed to fetch note tags:', err)
     }
   }
 
@@ -138,6 +171,75 @@ export default function NoteEditorPage() {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete note'
       toast.error(errorMessage)
       setError(errorMessage)
+    }
+  }
+
+  const addTag = async (tagName: string) => {
+    try {
+      // Create or get existing tag
+      const createResponse = await fetch('/api/tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: tagName })
+      })
+
+      if (!createResponse.ok) throw new Error('Failed to create tag')
+      const tag = await createResponse.json()
+
+      // Associate tag with note
+      const associateResponse = await fetch(`/api/notes/${noteId}/tags`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tagId: tag.id })
+      })
+
+      if (!associateResponse.ok) throw new Error('Failed to add tag to note')
+
+      // Update local state
+      setTags([...tags, tag])
+      setAllTags([...allTags.filter(t => t.id !== tag.id), tag])
+      setTagInput('')
+      setShowTagSuggestions(false)
+      toast.success(`Tag "${tag.name}" added`)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add tag'
+      toast.error(errorMessage)
+    }
+  }
+
+  const removeTag = async (tagId: string) => {
+    try {
+      const response = await fetch(`/api/notes/${noteId}/tags/${tagId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) throw new Error('Failed to remove tag')
+
+      setTags(tags.filter(t => t.id !== tagId))
+      toast.success('Tag removed')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to remove tag'
+      toast.error(errorMessage)
+    }
+  }
+
+  const handleTagInputChange = (value: string) => {
+    setTagInput(value)
+    // Show suggestions if user types #
+    if (value.includes('#')) {
+      setShowTagSuggestions(true)
+    } else {
+      setShowTagSuggestions(false)
+    }
+  }
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault()
+      const tagName = tagInput.replace(/^#/, '').trim()
+      if (tagName) {
+        addTag(tagName)
+      }
     }
   }
 
@@ -277,6 +379,64 @@ export default function NoteEditorPage() {
             {titleError && (
               <p className="mt-2 text-sm text-red-600">{titleError}</p>
             )}
+          </div>
+
+          {/* Tags Section */}
+          <div className="mb-6">
+            {/* Tag Chips */}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+                  >
+                    #{tag.name}
+                    <button
+                      onClick={() => removeTag(tag.id)}
+                      className="ml-1 hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Tag Input */}
+            <div className="relative">
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => handleTagInputChange(e.target.value)}
+                onKeyDown={handleTagInputKeyDown}
+                placeholder="Add tags (type #tagname)"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              {/* Tag Suggestions Dropdown */}
+              {showTagSuggestions && allTags.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {allTags
+                    .filter(tag =>
+                      tag.name.toLowerCase().includes(tagInput.replace(/^#/, '').toLowerCase()) &&
+                      !tags.some(t => t.id === tag.id)
+                    )
+                    .map((tag) => (
+                      <button
+                        key={tag.id}
+                        onClick={() => addTag(tag.name)}
+                        className="w-full px-3 py-2 text-left hover:bg-gray-100 flex items-center justify-between"
+                      >
+                        <span className="text-sm">#{tag.name}</span>
+                        <span className="text-xs text-gray-500">Click to add</span>
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <textarea
