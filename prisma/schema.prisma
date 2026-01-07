@@ -6,6 +6,96 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  notes     Note[]
+  categories Category[]
+  tags      Tag[]
+}
+
+// Note model - the core entity
+model Note {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @default("")
+  userId      String
+  categoryId  String?
+  isShared    Boolean  @default(false)
+  shareToken  String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  attachments Attachment[]
+  noteTags    NoteTag[]
+}
+
+// Category model for organizing notes
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  color     String   @default("#3B82F6")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes     Note[]
+
+  @@unique([userId, name])
+}
+
+// Tag model for flexible labeling
+model Tag {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  noteTags  NoteTag[]
+
+  @@unique([userId, name])
+}
+
+// Many-to-many relationship between Note and Tag
+model NoteTag {
+  noteId String
+  tagId  String
+  note   Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([noteId, tagId])
+}
+
+// Attachment model for images and videos
+model Attachment {
+  id        String   @id @default(cuid())
+  noteId    String
+  type      String   // "image" or "video"
+  url       String
+  filename  String
+  size      Int
+  createdAt DateTime @default(now())
+
+  // Relations
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
 }
