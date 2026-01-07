@@ -3,6 +3,7 @@ import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { SessionProvider } from '@/components/SessionProvider'
+import { UploadThingProvider } from '@/lib/uploadthing'
 
 export const metadata: Metadata = {
   title: 'Notes App',
@@ -21,10 +22,12 @@ export default function RootLayout({
       </head>
       <body>
         <SessionProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {children}
-            <Toaster position="top-right" />
-          </ThemeProvider>
+          <UploadThingProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              {children}
+              <Toaster position="top-right" />
+            </ThemeProvider>
+          </UploadThingProvider>
         </SessionProvider>
       </body>
     </html>
