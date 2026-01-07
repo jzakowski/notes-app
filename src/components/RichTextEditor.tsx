@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -17,7 +17,163 @@ interface RichTextEditorProps {
   placeholder?: string
 }
 
-const MenuBar = ({ editor }: { editor: any }) => {
+interface ImageUrlDialogProps {
+  isOpen: boolean
+  onClose: () => void
+  onInsert: (url: string, altText: string) => void
+}
+
+const ImageUrlDialog = ({ isOpen, onClose, onInsert }: ImageUrlDialogProps) => {
+  const [url, setUrl] = useState('')
+  const [altText, setAltText] = useState('')
+  const [previewError, setPreviewError] = useState(false)
+  const [isValidUrl, setIsValidUrl] = useState(true)
+
+  if (!isOpen) return null
+
+  const validateImageUrl = (inputUrl: string): boolean => {
+    if (!inputUrl.trim()) return false
+    try {
+      const urlObj = new URL(inputUrl)
+      // Check if it's an image URL by extension
+      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp']
+      const hasImageExtension = imageExtensions.some(ext =>
+        urlObj.pathname.toLowerCase().endsWith(ext)
+      )
+      return hasImageExtension || urlObj.protocol.startsWith('http')
+    } catch {
+      return false
+    }
+  }
+
+  const handleUrlChange = (value: string) => {
+    setUrl(value)
+    setIsValidUrl(validateImageUrl(value))
+    setPreviewError(false)
+  }
+
+  const handleInsert = () => {
+    if (!url.trim()) {
+      setIsValidUrl(false)
+      return
+    }
+
+    if (!validateImageUrl(url)) {
+      setIsValidUrl(false)
+      return
+    }
+
+    onInsert(url, altText || 'Image')
+    setUrl('')
+    setAltText('')
+    setPreviewError(false)
+    onClose()
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleInsert()
+    } else if (e.key === 'Escape') {
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Insert Image from URL</h3>
+        </div>
+
+        <div className="px-6 py-4 space-y-4">
+          {/* URL Input */}
+          <div>
+            <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Image URL
+            </label>
+            <input
+              id="imageUrl"
+              type="text"
+              value={url}
+              onChange={(e) => handleUrlChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="https://example.com/image.jpg"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                !isValidUrl
+                  ? 'border-red-300 dark:border-red-600 focus:ring-red-500'
+                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+              }`}
+              autoFocus
+            />
+            {!isValidUrl && url.trim() && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                Please enter a valid image URL
+              </p>
+            )}
+          </div>
+
+          {/* Alt Text Input */}
+          <div>
+            <label htmlFor="altText" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Alt Text (optional)
+            </label>
+            <input
+              id="altText"
+              type="text"
+              value={altText}
+              onChange={(e) => setAltText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Image description"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Preview */}
+          {url && isValidUrl && !previewError && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Preview
+              </label>
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900">
+                <img
+                  src={url}
+                  alt={altText || 'Preview'}
+                  className="w-full h-auto max-h-48 object-contain"
+                  onError={() => setPreviewError(true)}
+                  onLoad={() => setPreviewError(false)}
+                />
+                {previewError && (
+                  <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                    Failed to load image preview
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 flex justify-end space-x-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleInsert}
+            disabled={!url.trim() || !isValidUrl}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Insert Image
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const MenuBar = ({ editor, onInsertImageUrl }: { editor: any; onInsertImageUrl: () => void }) => {
   if (!editor) return null
 
   return (
@@ -216,6 +372,17 @@ const MenuBar = ({ editor }: { editor: any }) => {
         )}
 
         <button
+          onClick={onInsertImageUrl}
+          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+          title="Insert image from URL"
+          aria-label="Insert image from URL"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </button>
+
+        <button
           onClick={() => editor.chain().focus().unsetAllMarks().run()}
           className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
           title="Clear formatting"
@@ -260,6 +427,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
 }
 
 export default function RichTextEditor({ content, onChange, placeholder = 'Start writing...' }: RichTextEditorProps) {
+  const [showImageDialog, setShowImageDialog] = useState(false)
+
+  const handleInsertImageUrl = useCallback((url: string, altText: string) => {
+    // This will be handled by the editor's image command
+    // We'll call this from the dialog
+  }, [])
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -278,6 +452,8 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
         HTMLAttributes: {
           class: 'max-w-full h-auto rounded-lg',
         },
+        inline: true,
+        allowBase64: false,
       }),
       CodeBlockLowlight.configure({
         lowlight,
@@ -300,9 +476,15 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
   // Update editor content when prop changes
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content, false)
+      editor.commands.setContent(content)
     }
   }, [content, editor])
+
+  const handleInsertImage = (url: string, altText: string) => {
+    if (editor) {
+      editor.chain().focus().setImage({ src: url, alt: altText }).run()
+    }
+  }
 
   if (!editor) {
     return (
@@ -314,8 +496,13 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
 
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-      <MenuBar editor={editor} />
+      <MenuBar editor={editor} onInsertImageUrl={() => setShowImageDialog(true)} />
       <EditorContent editor={editor} />
+      <ImageUrlDialog
+        isOpen={showImageDialog}
+        onClose={() => setShowImageDialog(false)}
+        onInsert={handleInsertImage}
+      />
     </div>
   )
 }
