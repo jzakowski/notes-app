@@ -13,7 +13,12 @@
   pointer-events: none;
 }
 
-/* Headings */
+/* Dark mode placeholder */
+.dark .ProseMirror p.is-editor-empty:first-child::before {
+  color: #6b7280;
+}
+
+/* Headings - Light mode */
 .ProseMirror h1 {
   font-size: 2em;
   font-weight: 700;
@@ -41,6 +46,19 @@
   color: #374151;
 }
 
+/* Headings - Dark mode */
+.dark .ProseMirror h1 {
+  color: #f9fafb;
+}
+
+.dark .ProseMirror h2 {
+  color: #e5e7eb;
+}
+
+.dark .ProseMirror h3 {
+  color: #d1d5db;
+}
+
 /* Lists */
 .ProseMirror ul,
 .ProseMirror ol {
@@ -59,6 +77,11 @@
 
 .ProseMirror ol {
   list-style-type: decimal;
+}
+
+/* List items in dark mode */
+.dark .ProseMirror li {
+  color: #d1d5db;
 }
 
 /* Code Block */
@@ -88,6 +111,12 @@
   font-size: inherit;
 }
 
+/* Inline code in dark mode */
+.dark .ProseMirror code {
+  background: #374151;
+  color: #fca5a5;
+}
+
 /* Blockquote */
 .ProseMirror blockquote {
   border-left: 4px solid #3b82f6;
@@ -97,11 +126,22 @@
   font-style: italic;
 }
 
+/* Blockquote in dark mode */
+.dark .ProseMirror blockquote {
+  border-left-color: #60a5fa;
+  color: #9ca3af;
+}
+
 /* Horizontal Rule */
 .ProseMirror hr {
   border: none;
   border-top: 2px solid #e5e7eb;
   margin: 2em 0;
+}
+
+/* Horizontal rule in dark mode */
+.dark .ProseMirror hr {
+  border-top-color: #374151;
 }
 
 /* Links */
@@ -115,6 +155,20 @@
   color: #2563eb;
 }
 
+/* Links in dark mode */
+.dark .ProseMirror a {
+  color: #60a5fa;
+}
+
+.dark .ProseMirror a:hover {
+  color: #3b82f6;
+}
+
+/* Paragraph text color in dark mode */
+.dark .ProseMirror p {
+  color: #d1d5db;
+}
+
 /* Images */
 .ProseMirror img {
   max-width: 100%;
@@ -126,6 +180,12 @@
 /* Selected text */
 .ProseMirror ::selection {
   background: #bfdbfe;
+}
+
+/* Selected text in dark mode */
+.dark .ProseMirror ::selection {
+  background: #1e40af;
+  color: #f9fafb;
 }
 
 /* Focus */
